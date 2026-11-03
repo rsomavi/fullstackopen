@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
+import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
+import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -9,10 +11,9 @@ const App = () => {
   const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   const [notification, setNotification] = useState(null)
+
+  const blogFormRef = useRef()
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -22,7 +23,6 @@ const App = () => {
     fetchBlogs()
   }, [])
 
-  // 5.2: restore the session from local storage
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBloglistUser')
     if (loggedUserJSON) {
@@ -59,19 +59,49 @@ const App = () => {
     setUser(null)
   }
 
-  // 5.3
-  const handleCreate = async (event) => {
-    event.preventDefault()
-
+  // 5.5 / 5.6
+  const createBlog = async (blogObject) => {
     try {
-      const createdBlog = await blogService.create({ title, author, url })
+      const createdBlog = await blogService.create(blogObject)
+      blogFormRef.current.toggleVisibility()
       setBlogs(blogs.concat(createdBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
-      showNotification(`a new blog ${createdBlog.title} by ${createdBlog.author} added`, 'success')
+      showNotification(
+        `a new blog ${createdBlog.title} by ${createdBlog.author} added`,
+        'success'
+      )
     } catch (error) {
       const message = error.response?.data?.error || 'could not create the blog'
+      showNotification(message, 'error')
+    }
+  }
+
+  // 5.8
+  const likeBlog = async (blog) => {
+    try {
+      const updatedBlog = await blogService.update(blog.id, {
+        user: blog.user?.id,
+        likes: blog.likes + 1,
+        author: blog.author,
+        title: blog.title,
+        url: blog.url,
+      })
+      setBlogs(blogs.map((b) => (b.id === blog.id ? updatedBlog : b)))
+    } catch {
+      showNotification('could not update the blog', 'error')
+    }
+  }
+
+  // 5.11
+  const removeBlog = async (blog) => {
+    if (!window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)) {
+      return
+    }
+
+    try {
+      await blogService.remove(blog.id)
+      setBlogs(blogs.filter((b) => b.id !== blog.id))
+    } catch (error) {
+      const message = error.response?.data?.error || 'could not remove the blog'
       showNotification(message, 'error')
     }
   }
@@ -108,6 +138,9 @@ const App = () => {
     )
   }
 
+  // 5.10: sort a copy by likes, most liked first
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
+
   return (
     <div>
       <h2>blogs</h2>
@@ -118,43 +151,18 @@ const App = () => {
         <button onClick={handleLogout}>logout</button>
       </p>
 
-      <h2>create new</h2>
-      <form onSubmit={handleCreate}>
-        <div>
-          <label>
-            title
-            <input
-              type="text"
-              value={title}
-              onChange={({ target }) => setTitle(target.value)}
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            author
-            <input
-              type="text"
-              value={author}
-              onChange={({ target }) => setAuthor(target.value)}
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            url
-            <input
-              type="text"
-              value={url}
-              onChange={({ target }) => setUrl(target.value)}
-            />
-          </label>
-        </div>
-        <button type="submit">create</button>
-      </form>
+      <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+        <BlogForm createBlog={createBlog} />
+      </Togglable>
 
-      {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
+      {sortedBlogs.map((blog) => (
+        <Blog
+          key={blog.id}
+          blog={blog}
+          user={user}
+          likeBlog={likeBlog}
+          removeBlog={removeBlog}
+        />
       ))}
     </div>
   )
