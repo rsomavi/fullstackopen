@@ -1,22 +1,36 @@
 import { Link } from 'react-router-dom'
+import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material'
 
-const Menu = ({ user, handleLogout }) => {
-  const padding = { padding: 5 }
+const hoverStyle = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
 
-  return (
-    <div>
-      <Link style={padding} to="/">blogs</Link>
-      {user && <Link style={padding} to="/create">create new</Link>}
-      {user ? (
-        <span>
-          {user.name} logged in
-          <button onClick={handleLogout}>logout</button>
-        </span>
-      ) : (
-        <Link style={padding} to="/login">login</Link>
+const Menu = ({ user, handleLogout }) => (
+  <AppBar position="static">
+    <Toolbar>
+      <Button color="inherit" component={Link} to="/" sx={hoverStyle}>
+        blogs
+      </Button>
+      {user && (
+        <Button color="inherit" component={Link} to="/create" sx={hoverStyle}>
+          create new
+        </Button>
       )}
-    </div>
-  )
-}
+      <Box sx={{ flexGrow: 1 }} />
+      {user ? (
+        <>
+          <Typography component="span" sx={{ mr: 2 }}>
+            {user.name} logged in
+          </Typography>
+          <Button color="inherit" onClick={handleLogout} sx={hoverStyle}>
+            logout
+          </Button>
+        </>
+      ) : (
+        <Button color="inherit" component={Link} to="/login" sx={hoverStyle}>
+          login
+        </Button>
+      )}
+    </Toolbar>
+  </AppBar>
+)
 
 export default Menu

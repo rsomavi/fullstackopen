@@ -1,3 +1,5 @@
+import { Paper, Typography, Button, Link as MuiLink, Box } from '@mui/material'
+
 const BlogView = ({ blog, user, likeBlog, removeBlog }) => {
   if (!blog) {
     return null
@@ -8,16 +10,32 @@ const BlogView = ({ blog, user, likeBlog, removeBlog }) => {
   )
 
   return (
-    <div>
-      <h2>{blog.title} {blog.author}</h2>
-      <div>{blog.url}</div>
-      <div>
-        likes {blog.likes}
-        {user && <button onClick={() => likeBlog(blog)}>like</button>}
-      </div>
-      <div>added by {blog.user ? blog.user.name : 'unknown'}</div>
-      {isCreator && <button onClick={() => removeBlog(blog)}>remove</button>}
-    </div>
+    <Paper sx={{ p: 3, mt: 3 }}>
+      <Typography variant="h4" component="h2" gutterBottom>
+        {blog.title} {blog.author}
+      </Typography>
+      <Typography gutterBottom>
+        <MuiLink href={blog.url} target="_blank" rel="noreferrer">
+          {blog.url}
+        </MuiLink>
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+        <Typography>likes {blog.likes}</Typography>
+        {user && (
+          <Button variant="outlined" size="small" onClick={() => likeBlog(blog)}>
+            like
+          </Button>
+        )}
+      </Box>
+      <Typography color="text.secondary" gutterBottom>
+        added by {blog.user ? blog.user.name : 'unknown'}
+      </Typography>
+      {isCreator && (
+        <Button color="error" variant="contained" onClick={() => removeBlog(blog)}>
+          remove
+        </Button>
+      )}
+    </Paper>
   )
 }
 

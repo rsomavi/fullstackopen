@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useMatch, useNavigate } from 'react-router-dom'
+import { Container } from '@mui/material'
 import BlogList from './components/BlogList'
 import BlogView from './components/BlogView'
 import BlogForm from './components/BlogForm'
@@ -103,7 +104,7 @@ const App = () => {
   }
 
   return (
-    <div>
+    <Container>
       <Menu user={user} handleLogout={handleLogout} />
       <Notification notification={notification} />
 
@@ -131,7 +132,7 @@ const App = () => {
           element={user ? <Navigate replace to="/" /> : <LoginForm login={login} />}
         />
       </Routes>
-    </div>
+    </Container>
   )
 }
 
